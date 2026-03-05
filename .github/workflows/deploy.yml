@@ -108,10 +108,6 @@ jobs:
           name: frontend-dist
           path: dashboard/dist
 
-      - name: Instalar dependencias de producao
-        run: npm install --omit=dev
-        working-directory: dashboard
-
       - name: Preparar pacote de deploy
         run: |
           mkdir -p deploy-package
@@ -122,33 +118,7 @@ jobs:
           cp package.json deploy-package/
           cp package-lock.json deploy-package/ 2>/dev/null || true
           cd deploy-package && npm install --omit=dev
-          cat > web.config << 'WEBCONFIG'
-          <?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <system.webServer>
-              <handlers>
-                <add name="iisnode" path="server/index.js" verb="*" modules="iisnode"/>
-              </handlers>
-              <rewrite>
-                <rules>
-                  <rule name="NodeInspector" patternSyntax="ECMAScript" stopProcessing="true">
-                    <match url="^server/index.js\/debug[\/]?" />
-                  </rule>
-                  <rule name="StaticContent">
-                    <action type="Rewrite" url="dist{REQUEST_URI}"/>
-                  </rule>
-                  <rule name="DynamicContent">
-                    <conditions>
-                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True"/>
-                    </conditions>
-                    <action type="Rewrite" url="server/index.js"/>
-                  </rule>
-                </rules>
-              </rewrite>
-              <iisnode watchedFiles="web.config;*.js"/>
-            </system.webServer>
-          </configuration>
-          WEBCONFIG
+          cd .. && cd deploy-package && zip -r ../deploy.zip .
         working-directory: dashboard
 
       - name: Login no Azure
@@ -156,22 +126,25 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Configurar App Settings
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: ${{ secrets.LAB_AVANCADO_APP_NAME }}
-          app-settings-json: |
-            [
-              { "name": "NODE_ENV",       "value": "production" },
-              { "name": "WEBSITE_NODE_DEFAULT_VERSION", "value": "~20" },
-              { "name": "SCM_DO_BUILD_DURING_DEPLOYMENT", "value": "false" }
-            ]
+      - name: Configurar App Settings e startup
+        run: |
+          az webapp config appsettings set \
+            --name ${{ secrets.LAB_AVANCADO_APP_NAME }} \
+            --resource-group rg-lab-avancado \
+            --settings \
+              NODE_ENV=production \
+              SCM_DO_BUILD_DURING_DEPLOYMENT=false \
+              WEBSITE_RUN_FROM_PACKAGE=1
+          az webapp config set \
+            --name ${{ secrets.LAB_AVANCADO_APP_NAME }} \
+            --resource-group rg-lab-avancado \
+            --startup-file "node server/index.js"
 
       - name: Deploy para App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.LAB_AVANCADO_APP_NAME }}
-          package: dashboard/deploy-package
+          package: dashboard/deploy.zip
 
   # ─── Job 3: Deploy Azure Functions ─────────────────────────
   deploy-functions:
