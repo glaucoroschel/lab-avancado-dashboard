@@ -152,7 +152,7 @@ jobs:
         working-directory: dashboard
 
       - name: Login no Azure
-        uses: azure/login@v2
+        uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -195,12 +195,12 @@ jobs:
         working-directory: functions
 
       - name: Login no Azure
-        uses: azure/login@v2
+        uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy para Azure Functions
-        uses: azure/functions-action@v2
+        uses: azure/functions-action@v1
         with:
           app-name: ${{ secrets.LAB_AVANCADO_FUNCTIONAPP_NAME }}
           package: functions
@@ -227,7 +227,7 @@ jobs:
         working-directory: dashboard
 
       - name: Login no Azure
-        uses: azure/login@v2
+        uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
