@@ -6,7 +6,7 @@ import { StatusBadge, type OrderStatus } from '../components/StatusBadge';
 import type { Order, EventLogEntry } from '../types';
 
 function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return (value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function formatDate(iso: string): string {

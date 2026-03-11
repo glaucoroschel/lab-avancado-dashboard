@@ -5,7 +5,7 @@ import { getProducts, createOrder } from '../services/api';
 import type { Product } from '../types';
 
 function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return (value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 interface LineItem {

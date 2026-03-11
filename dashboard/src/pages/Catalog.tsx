@@ -4,7 +4,7 @@ import { getProducts } from '../services/api';
 import type { Product } from '../types';
 
 function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return (value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function stockColor(stock: number): { bg: string; text: string; label: string } {
