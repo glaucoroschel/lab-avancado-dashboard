@@ -2,6 +2,7 @@
   "name": "lab-avancado-functions",
   "version": "1.0.0",
   "description": "Azure Functions para o Lab Avancado - Retail Operations Dashboard",
+  "main": "src/index.js",
   "dependencies": {
     "@azure/functions": "^4.0.0",
     "@azure/service-bus": "^7.9.0",
