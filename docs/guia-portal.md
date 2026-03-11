@@ -991,10 +991,10 @@ O repositorio inclui um workflow do GitHub Actions que automatiza todo o process
 No Azure Cloud Shell ou terminal local com Azure CLI:
 
 ```bash
-az ad sp create-for-rbac --name "sp-lab-avancado" --role Contributor --scopes /subscriptions/{subscription-id}/resourceGroups/rg-lab-avancado
+az ad sp create-for-rbac --name "sp-lab-avancado" --role Contributor --scopes /subscriptions/{subscription-id}/resourceGroups/rg-lab-avancado --sdk-auth
 ```
 
-> Copie o JSON de saida — ele sera usado como secret no GitHub.
+> **Importante:** O parametro `--sdk-auth` eh necessario para gerar o JSON no formato que o GitHub Actions (`azure/login@v1`) espera (com `clientId`, `clientSecret`, `tenantId`, `subscriptionId`). Copie o JSON completo de saida — ele sera usado como secret no GitHub.
 
 ### Passo 10.2: Configurar Secrets no GitHub
 
