@@ -2,12 +2,26 @@ const express = require('express');
 const { query, execute } = require('../db');
 
 const router = express.Router();
+// Map SQL PascalCase columns to frontend camelCase
+function toCamelCase(row) {
+  return {
+    id: row.Id,
+    name: row.Name,
+    description: row.Description,
+    price: row.Price,
+    category: row.Category,
+    stock: row.Stock,
+    imageUrl: row.ImageUrl,
+    createdAt: row.CreatedAt,
+  };
+}
+
 
 // GET /api/products — list all products
 router.get('/', async (req, res) => {
   try {
     const products = await query('SELECT * FROM Products ORDER BY Category, Name');
-    res.json(products);
+    res.json(products.map(toCamelCase));
   } catch (err) {
     console.error('Error fetching products:', err.message);
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -25,7 +39,7 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.json(products[0]);
+    res.json(toCamelCase(products[0]));
   } catch (err) {
     console.error('Error fetching product:', err.message);
     res.status(500).json({ error: 'Failed to fetch product' });
@@ -52,7 +66,7 @@ router.patch('/:id/stock', async (req, res) => {
     }
 
     const updated = await query('SELECT * FROM Products WHERE Id = @id', { id: productId });
-    res.json(updated[0]);
+    res.json(toCamelCase(updated[0]));
   } catch (err) {
     console.error('Error updating stock:', err.message);
     res.status(500).json({ error: 'Failed to update stock' });

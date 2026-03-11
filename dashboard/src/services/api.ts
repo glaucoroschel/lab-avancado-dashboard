@@ -59,9 +59,9 @@ export async function getEventStats(): Promise<Record<string, number>> {
 }
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
-  return request<DashboardMetrics>('/dashboard/metrics');
+  return request<DashboardMetrics>('/metrics/dashboard');
 }
 
 export async function getPipelineMetrics(): Promise<PipelineStage[]> {
-  return request<PipelineStage[]>('/pipeline/metrics');
+  return request<PipelineStage[]>('/metrics/pipeline');
 }

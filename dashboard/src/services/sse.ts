@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { EventLogEntry } from '../types';
 
-const SSE_URL = '/sse/events';
+const SSE_URL = '/api/events/stream';
 const MAX_EVENTS = 200;
 const RECONNECT_DELAY_MS = 3000;
 
