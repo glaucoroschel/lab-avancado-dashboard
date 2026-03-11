@@ -155,9 +155,24 @@ router.post('/', async (req, res) => {
     const orderId = uuidv4();
     let totalAmount = 0;
 
-    // Calculate total from items
+    // Enrich items with product data from DB when not provided
+    const enrichedItems = [];
     for (const item of items) {
-      totalAmount += item.unitPrice * item.quantity;
+      let unitPrice = item.unitPrice;
+      let productName = item.productName;
+
+      if (unitPrice === undefined || productName === undefined) {
+        const products = await query('SELECT Name, Price FROM Products WHERE Id = @id', {
+          id: parseInt(item.productId, 10),
+        });
+        if (products.length > 0) {
+          unitPrice = unitPrice ?? products[0].Price;
+          productName = productName ?? products[0].Name;
+        }
+      }
+
+      enrichedItems.push({ ...item, unitPrice, productName });
+      totalAmount += (unitPrice || 0) * item.quantity;
     }
 
     // Insert order
@@ -168,7 +183,7 @@ router.post('/', async (req, res) => {
     );
 
     // Insert order items
-    for (const item of items) {
+    for (const item of enrichedItems) {
       await execute(
         `INSERT INTO OrderItems (OrderId, ProductId, ProductName, Quantity, UnitPrice)
          VALUES (@orderId, @productId, @productName, @quantity, @unitPrice)`,
@@ -231,7 +246,7 @@ router.post('/', async (req, res) => {
             orderId,
             customerName,
             totalAmount,
-            items,
+            items: enrichedItems,
             createdAt: new Date().toISOString(),
           }),
         });
@@ -241,16 +256,16 @@ router.post('/', async (req, res) => {
         } else {
           console.warn(`APIM Gateway returned ${apimResponse.status} - falling back to direct Service Bus`);
           // Fallback to direct Service Bus if APIM fails
-          await sendDirectToServiceBus(orderId, customerName, totalAmount, items);
+          await sendDirectToServiceBus(orderId, customerName, totalAmount, enrichedItems);
         }
       } catch (apimErr) {
         console.error('Failed to send via APIM Gateway:', apimErr.message);
         // Fallback to direct Service Bus
-        await sendDirectToServiceBus(orderId, customerName, totalAmount, items);
+        await sendDirectToServiceBus(orderId, customerName, totalAmount, enrichedItems);
       }
     } else {
       // Direct Service Bus path (no APIM configured)
-      await sendDirectToServiceBus(orderId, customerName, totalAmount, items);
+      await sendDirectToServiceBus(orderId, customerName, totalAmount, enrichedItems);
     }
 
     // Return created order
@@ -259,7 +274,7 @@ router.post('/', async (req, res) => {
       customerName,
       totalAmount,
       status: 'pending',
-      items,
+      items: enrichedItems,
     };
 
     res.status(201).json(createdOrder);
