@@ -991,10 +991,25 @@ O repositorio inclui um workflow do GitHub Actions que automatiza todo o process
 No Azure Cloud Shell ou terminal local com Azure CLI:
 
 ```bash
-az ad sp create-for-rbac --name "sp-lab-avancado" --role Contributor --scopes /subscriptions/{subscription-id}/resourceGroups/rg-lab-avancado
+az ad sp create-for-rbac --name "sp-lab-avancado" \
+  --role Contributor \
+  --scopes /subscriptions/{subscription-id}/resourceGroups/rg-lab-avancado \
+  --sdk-auth
 ```
 
-> A saida sera um JSON com `appId`, `password`, `tenant`. Anote esses valores — eles serao usados como secrets no GitHub.
+> **Importante:** Substitua `{subscription-id}` pelo ID da sua subscription (Portal > Subscriptions).
+>
+> A saida sera um JSON como:
+> ```json
+> {
+>   "clientId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+>   "clientSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+>   "subscriptionId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+>   "tenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+>   ...
+> }
+> ```
+> Anote os 4 valores acima — eles serao usados como secrets no GitHub.
 
 ### Passo 10.2: Configurar Secrets no GitHub
 
@@ -1004,10 +1019,10 @@ az ad sp create-for-rbac --name "sp-lab-avancado" --role Contributor --scopes /s
 
 | Secret | Valor | Onde encontrar |
 |--------|-------|----------------|
-| `AZURE_CLIENT_ID` | `appId` do Service Principal | Campo `appId` da saida do passo 10.1 |
-| `AZURE_CLIENT_SECRET` | `password` do Service Principal | Campo `password` da saida do passo 10.1 |
-| `AZURE_TENANT_ID` | `tenant` do Service Principal | Campo `tenant` da saida do passo 10.1 |
-| `AZURE_SUBSCRIPTION_ID` | ID da sua subscription Azure | Portal > Subscriptions > copie o Subscription ID |
+| `AZURE_CLIENT_ID` | `clientId` do Service Principal | Campo `clientId` da saida do passo 10.1 |
+| `AZURE_CLIENT_SECRET` | `clientSecret` do Service Principal | Campo `clientSecret` da saida do passo 10.1 |
+| `AZURE_TENANT_ID` | `tenantId` do Service Principal | Campo `tenantId` da saida do passo 10.1 |
+| `AZURE_SUBSCRIPTION_ID` | `subscriptionId` da subscription | Campo `subscriptionId` da saida do passo 10.1 |
 | `LAB_AVANCADO_APP_NAME` | `app-lab-avancado` | Nome do App Service (Etapa 3) |
 | `LAB_AVANCADO_FUNCTIONAPP_NAME` | `func-lab-avancado` | Nome do Function App (Etapa 9) |
 | `LAB_AVANCADO_SQL_SERVER` | `sql-lab-avancado.database.windows.net` | FQDN do SQL Server (Etapa 2) |
