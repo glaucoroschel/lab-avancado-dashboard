@@ -136,14 +136,14 @@ jobs:
         run: |
           az webapp config appsettings delete \
             --name ${{ secrets.LAB_AVANCADO_APP_NAME }} \
-            --resource-group rg-lab-avancado \
+            --resource-group rg-lab-advanced \
             --setting-names WEBSITE_RUN_FROM_PACKAGE 2>/dev/null || true
 
       - name: Configurar App Settings
         run: |
           az webapp config appsettings set \
             --name ${{ secrets.LAB_AVANCADO_APP_NAME }} \
-            --resource-group rg-lab-avancado \
+            --resource-group rg-lab-advanced \
             --settings \
               NODE_ENV=production \
               SCM_DO_BUILD_DURING_DEPLOYMENT=false \
@@ -156,14 +156,14 @@ jobs:
         run: |
           az webapp config set \
             --name ${{ secrets.LAB_AVANCADO_APP_NAME }} \
-            --resource-group rg-lab-avancado \
+            --resource-group rg-lab-advanced \
             --startup-file "node server/index.js"
 
       - name: Deploy para App Service
         run: |
           az webapp deploy \
             --name ${{ secrets.LAB_AVANCADO_APP_NAME }} \
-            --resource-group rg-lab-avancado \
+            --resource-group rg-lab-advanced \
             --src-path dashboard/deploy.zip \
             --type zip
 
@@ -201,28 +201,28 @@ jobs:
           cd functions && zip -r ../functions.zip . && cd ..
           az functionapp deployment source config-zip \
             --name ${{ secrets.LAB_AVANCADO_FUNCTIONAPP_NAME }} \
-            --resource-group rg-lab-avancado \
+            --resource-group rg-lab-advanced \
             --src functions.zip
 
       - name: Configurar APP_CALLBACK_URL no Function App
         run: |
           az functionapp config appsettings set \
             --name ${{ secrets.LAB_AVANCADO_FUNCTIONAPP_NAME }} \
-            --resource-group rg-lab-avancado \
+            --resource-group rg-lab-advanced \
             --settings \
               APP_CALLBACK_URL=https://${{ secrets.LAB_AVANCADO_APP_NAME }}.azurewebsites.net
 
       - name: Configurar APIM policy (roteamento para Function App)
         run: |
           # Descobre o nome do APIM no resource group
-          APIM_NAME=$(az apim list --resource-group rg-lab-avancado --query "[0].name" -o tsv 2>/dev/null)
+          APIM_NAME=$(az apim list --resource-group rg-lab-advanced --query "[0].name" -o tsv 2>/dev/null)
           if [ -z "$APIM_NAME" ]; then
             echo "APIM nao encontrado — pulando configuracao de policy"
             exit 0
           fi
 
           # Descobre o API ID
-          API_ID=$(az apim api list --resource-group rg-lab-avancado --service-name "$APIM_NAME" --query "[0].name" -o tsv 2>/dev/null)
+          API_ID=$(az apim api list --resource-group rg-lab-advanced --service-name "$APIM_NAME" --query "[0].name" -o tsv 2>/dev/null)
           if [ -z "$API_ID" ]; then
             echo "API nao encontrada no APIM — pulando"
             exit 0
@@ -235,12 +235,12 @@ jobs:
           POLICY_XML="<policies><inbound><base /><set-backend-service base-url=\"${FUNC_URL}\" /><rewrite-uri template=\"/api/orders\" /><rate-limit calls=\"60\" renewal-period=\"60\" /></inbound><backend><forward-request /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>"
 
           # Descobre o operation ID
-          OP_ID=$(az apim api operation list --resource-group rg-lab-avancado --service-name "$APIM_NAME" --api-id "$API_ID" --query "[0].name" -o tsv 2>/dev/null)
+          OP_ID=$(az apim api operation list --resource-group rg-lab-advanced --service-name "$APIM_NAME" --api-id "$API_ID" --query "[0].name" -o tsv 2>/dev/null)
 
           if [ -n "$OP_ID" ]; then
             # Aplica policy na operacao
             az rest --method put \
-              --uri "https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/rg-lab-avancado/providers/Microsoft.ApiManagement/service/${APIM_NAME}/apis/${API_ID}/operations/${OP_ID}/policies/policy?api-version=2023-05-01-preview" \
+              --uri "https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/rg-lab-advanced/providers/Microsoft.ApiManagement/service/${APIM_NAME}/apis/${API_ID}/operations/${OP_ID}/policies/policy?api-version=2023-05-01-preview" \
               --headers "Content-Type=application/json" \
               --body "{\"properties\":{\"format\":\"xml\",\"value\":\"${POLICY_XML}\"}}" \
               --output none 2>/dev/null || true
@@ -284,7 +284,7 @@ jobs:
           echo "Runner IP: $RUNNER_IP"
           SQL_SERVER_NAME=$(echo "${{ secrets.LAB_AVANCADO_SQL_SERVER }}" | sed 's/.database.windows.net//')
           az sql server firewall-rule create \
-            --resource-group rg-lab-avancado \
+            --resource-group rg-lab-advanced \
             --server "$SQL_SERVER_NAME" \
             --name "github-actions-runner" \
             --start-ip-address "$RUNNER_IP" \
@@ -304,7 +304,7 @@ jobs:
         run: |
           SQL_SERVER_NAME=$(echo "${{ secrets.LAB_AVANCADO_SQL_SERVER }}" | sed 's/.database.windows.net//')
           az sql server firewall-rule delete \
-            --resource-group rg-lab-avancado \
+            --resource-group rg-lab-advanced \
             --server "$SQL_SERVER_NAME" \
             --name "github-actions-runner" \
             --yes 2>/dev/null || true
